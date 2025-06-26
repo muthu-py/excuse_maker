@@ -86,10 +86,51 @@ def excuse_generator(prompt_text):
         return response.text.strip()
     except Exception as e:
         return f"Error generating excuse: {e}"
+    
+
+# === Apology Generator (Feature 5) ===
+
+def infer_apology_tone_from_excuse(excuse):
+    excuse = excuse.lower()
+    if any(word in excuse for word in ["manager", "boss", "work", "office", "project", "meeting"]):
+        return "professional"
+    elif any(word in excuse for word in ["mother", "father", "sick", "daughter", "grandpa", "emergency"]):
+        return "emotional"
+    elif any(word in excuse for word in ["fire", "accident", "collapsed", "fainted"]):
+        return "dramatic"
+    elif any(word in excuse for word in ["party", "hangout", "birthday", "overslept", "netflix"]):
+        return "funny"
+    else:
+        return "neutral"
+
+def generate_apology(prompt_text):
+    excuse = excuse_generator(prompt_text)
+    tone = infer_apology_tone_from_excuse(excuse)
+
+    prompt = (
+        f"Write an apology message for this excuse:\n"
+        f"\"{excuse}\"\n"
+        f"The tone should be: {tone}\n"
+        f"It should sound realistic, slightly guilt-tripping, and sincere. Keep it under 80 words."
+    )
+
+    try:
+        response = model.generate_content(prompt)
+        return response.text.strip()
+    except Exception as e:
+        return f"Error generating apology: {e}"
+
 
 if __name__ == "__main__":
-    print(excuse_generator("I need a funny excuse for missing my friend's birthday party. Make it exaggerated."))
+    prompt_input = "I need a funny excuse for missing my friend's birthday party. Make it exaggerated."
+    
+    print("=== Excuse ===")
+    excuse = excuse_generator(prompt_input)
+    print(excuse)
 
+    print("\n=== Apology ===")
+    apology = generate_apology(prompt_input)
+    print(apology)
     #print(excuse_generator("Make me a formal excuse for skipping my boss’s meeting due to an emergency."))
 
     #print(excuse_generator("Give me a creative but believable excuse for missing class today."))
