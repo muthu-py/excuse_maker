@@ -62,6 +62,21 @@ def generate_fake_document(excuse, name=None, context=None, output_path="excuse_
     }
     doc_title = title_map.get(context.lower(), "Excuse Document")
 
+    institution = ""
+    if "school" in excuse.lower():
+        institution = "Greenwood High School"
+    elif "college" in excuse.lower():
+        institution = "Riverdale College"
+    elif "hospital" in excuse.lower():
+        institution = "City Medical Center"
+    elif "office" in excuse.lower() or "company" in excuse.lower():
+        institution = "TechNova Pvt Ltd"
+    elif "clinic" in excuse.lower():
+        institution = "LifeCare Clinic"
+
+    # ✍️ Try to infer if signature block is needed
+    include_signature = any(word in excuse.lower() for word in ["doctor", "clinic", "hr", "principal", "manager"])
+
     # 🔁 Gemini-generated body text
     gemini_prompt = (
         f"Write a professional excuse note titled '{doc_title}' for someone named {name} "
@@ -86,13 +101,26 @@ def generate_fake_document(excuse, name=None, context=None, output_path="excuse_
     c.setFont("Helvetica", 12)
 
     text = c.beginText(70, 750)
+
+    if institution:
+        text.textLine(f"Institution: {institution}")
+        text.textLine("")
+
     for line in body.split("\n"):
         for wrapped_line in re.findall('.{1,90}(?:\\s+|$)', line):  # Word-wrap manually
             text.textLine(wrapped_line.strip())
     c.drawText(text)
 
-    c.drawString(70, 130, "Signed by: Dr. AI Generator")
-    c.drawString(70, 110, f"Date: {today}")
+    if include_signature:
+        c.setFont("Helvetica-Oblique", 12)
+        c.drawString(70, 140, "Authorized by:")
+        c.drawString(70, 125, "Dr. AI Generator")
+        c.line(70, 120, 200, 120)
+        c.drawString(70, 110, f"Date: {today}")
+    else:
+        c.setFont("Helvetica", 12)
+        c.drawString(70, 110, f"Signed: Dr. AI Generator  |  Date: {today}")
+
     c.save()
 
     return os.path.abspath(output_path)
