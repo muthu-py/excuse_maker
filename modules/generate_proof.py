@@ -1,4 +1,4 @@
-from generate_exucuse import *
+from modules.generate_exucuse import *
 import os
 import re
 import datetime
@@ -7,6 +7,7 @@ from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 from html2image import Html2Image
 import spacy
+from gtts import gTTS
 
 nlp = spacy.load("en_core_web_sm")
 
@@ -58,7 +59,7 @@ def generate_fake_document(excuse, name=None, context=None, output_path="excuse_
         "school": "Student Absence Certificate",
         "social": "Apology Letter",
         "family": "Family Emergency Note",
-        "general": "Excuse Note"
+        "general": "Excuse Document"
     }
     doc_title = title_map.get(context.lower(), "Excuse Document")
 
@@ -130,29 +131,16 @@ def generate_fake_document(excuse, name=None, context=None, output_path="excuse_
 def generate_fake_chat_image(excuse_text, output_path="full_chat.png", user_name="You", friend_name="Friend"):
     """
     Uses Gemini to generate a realistic WhatsApp-style chat conversation and renders it as a screenshot.
-
-    Parameters:
-    - excuse_text (str): The excuse message
-    - output_path (str): Screenshot output path
-    - user_name (str): Display name for user messages (default: 'You')
-    - friend_name (str): Display name for the friend (default: 'Friend')
-
-    Returns:
-    - str: Path to the saved image
     """
-
-    prompt = (
-        f"Simulate a short WhatsApp-style chat between {friend_name} and {user_name} about this excuse:\n"
-        f"\"{excuse_text}\"\n\n"
-        f"Format as:\n{friend_name}: message\n{user_name}: message\n"
-        f"Limit to 6-8 lines."
-    )
-
     try:
+        prompt = (
+            f"Simulate a short WhatsApp-style chat between {friend_name} and {user_name} about this excuse:\n"
+            f'"{excuse_text}"\n\n'
+            f"Format as:\n{friend_name}: message\n{user_name}: message\n"
+            f"Limit to 6-8 lines."
+        )
         response = model.generate_content(prompt)
         dialogue = response.text.strip()
-
-        # Parse lines and prepare HTML
         messages = []
         for line in dialogue.split("\n"):
             if ":" in line:
@@ -163,8 +151,6 @@ def generate_fake_chat_image(excuse_text, output_path="full_chat.png", user_name
                     messages.append({"sender": "you", "text": text})
                 else:
                     messages.append({"sender": "them", "text": text})
-
-        # Generate HTML with ticks and timestamps
         html_messages = ""
         timestamp = datetime.datetime.now().strftime("%I:%M %p")
         for msg in messages:
@@ -176,8 +162,6 @@ def generate_fake_chat_image(excuse_text, output_path="full_chat.png", user_name
                 <div class="meta">{timestamp} {tick}</div>
             </div>
             '''
-
-        # Final HTML with styles
         html_content = f"""
         <html>
         <head>
@@ -199,20 +183,20 @@ def generate_fake_chat_image(excuse_text, output_path="full_chat.png", user_name
                     display: inline-block;
                     clear: both;
                 }}
-                .right {{
+                .bubble.left {{
+                    background-color: #fff;
+                    float: left;
+                }}
+                .bubble.right {{
                     background-color: #dcf8c6;
                     float: right;
-                    border-bottom-right-radius: 0;
                 }}
-                .left {{
-                    background-color: #ffffff;
-                    float: left;
-                    border-bottom-left-radius: 0;
+                .text {{
+                    margin-bottom: 5px;
                 }}
                 .meta {{
-                    font-size: 10px;
-                    color: #666;
-                    margin-top: 5px;
+                    font-size: 11px;
+                    color: #999;
                     text-align: right;
                 }}
             </style>
@@ -222,54 +206,129 @@ def generate_fake_chat_image(excuse_text, output_path="full_chat.png", user_name
         </body>
         </html>
         """
-
-        html_file = "gemini_chat_temp.html"
-        with open(html_file, "w", encoding="utf-8") as f:
-            f.write(html_content)
-
-        hti = Html2Image()
-        hti.screenshot(html_file=html_file, save_as=output_path)
-        return output_path
-
+        # Ensure output_path is absolute and directory exists
+        output_path = os.path.abspath(output_path)
+        os.makedirs(os.path.dirname(output_path), exist_ok=True)
+        output_dir = os.path.dirname(output_path)
+        output_file = os.path.basename(output_path)
+        hti = Html2Image(browser_executable='C:/Program Files/BraveSoftware/Brave-Browser/Application/brave.exe')
+        hti.output_path = output_dir
+        hti.screenshot(html_str=html_content, save_as=output_file)
+        print(f"[generate_fake_chat_image] Chat image saved to: {os.path.join(output_dir, output_file)}")
+        return os.path.join(output_dir, output_file)
     except Exception as e:
-        return f"Error generating conversation: {e}"
+        print(f"[generate_fake_chat_image] Error generating chat image: {e}")
+        return None
 
-
-# === FEATURE 3.3: FAKE LOCATION LOG GENERATOR ===
+# === FEATURE 3.3: FAKE LOCATION SEQUENCE GENERATOR ===
 
 def infer_location_sequence_from_excuse(excuse_text):
+    """
+    Use NLP to infer a realistic location sequence based on the excuse.
+    """
     excuse_lower = excuse_text.lower()
-
-    if "hospital" in excuse_lower or "fever" in excuse_lower or "doctor" in excuse_lower:
-        return ["Home", "Local Clinic", "Pharmacy", "Hospital Lobby", "Emergency Room"]
-
-    elif "family" in excuse_lower or "mother" in excuse_lower or "daughter" in excuse_lower:
-        return ["Home", "Parent's House", "Grandparent's House", "Community Center", "Grocery Store"]
-
-    elif "internet" in excuse_lower or "power" in excuse_lower:
-        return ["Home", "Electric Office", "Cafe", "Wi-Fi Repair Station", "Back Home"]
-
-    elif "traffic" in excuse_lower or "car" in excuse_lower:
-        return ["Home", "Highway Exit 17", "Gas Station", "Towing Center", "Mechanic Shop"]
-
-    elif "pet" in excuse_lower or "dog" in excuse_lower or "cat" in excuse_lower:
-        return ["Home", "Veterinary Clinic", "Pet Store", "Animal Shelter", "Home Again"]
-
-    return ["Home", "Local Area", "Grocery", "Park", "Back Home"]
+    
+    if "hospital" in excuse_lower or "emergency" in excuse_lower:
+        return ["Home", "Hospital", "Pharmacy", "Home"]
+    elif "school" in excuse_lower or "exam" in excuse_lower:
+        return ["Home", "School", "Library", "Home"]
+    elif "office" in excuse_lower or "meeting" in excuse_lower:
+        return ["Home", "Office", "Coffee Shop", "Home"]
+    elif "family" in excuse_lower or "mother" in excuse_lower or "father" in excuse_lower:
+        return ["Home", "Family House", "Grocery Store", "Home"]
+    else:
+        return ["Home", "Unknown Location", "Home"]
 
 def generate_fake_location(excuse_text, name=None):
+    """
+    Generate a fake location sequence based on the excuse context.
+    """
     if name is None:
         name = extract_name_nlp(excuse_text)
-
-    log = f"Location Log for {name} (supporting the excuse):\n\n"
-    current_time = datetime.datetime.now()
+    
     locations = infer_location_sequence_from_excuse(excuse_text)
+    current_time = datetime.datetime.now()
+    
+    location_data = []
+    for i, location in enumerate(locations):
+        timestamp = current_time + datetime.timedelta(hours=i)
+        location_data.append({
+            "name": name,
+            "location": location,
+            "timestamp": timestamp.strftime("%Y-%m-%d %H:%M:%S"),
+            "status": "Active"
+        })
+    
+    return location_data
 
-    for i, place in enumerate(locations):
-        timestamp = current_time - datetime.timedelta(minutes=15 * i)
-        log += f"{timestamp.strftime('%Y-%m-%d %H:%M:%S')} - {place}\n"
+# === FEATURE 3.4: AUDIO GENERATOR ===
+def save_excuse_audio(excuse_text, output_path="excuse_audio.mp3", language='en'):
+    """
+    Generate audio file from excuse text using Google Text-to-Speech.
+    
+    Parameters:
+    - excuse_text (str): The excuse text to convert to audio
+    - output_path (str): Output path for the audio file
+    - language (str): Language code (default: 'en' for English)
+    
+    Returns:
+    - str: Path to the saved audio file
+    """
+    try:
+        # Create gTTS object
+        tts = gTTS(text=excuse_text, lang=language, slow=False)
+        
+        # Save the audio file
+        tts.save(output_path)
+        
+        return os.path.abspath(output_path)
+    except Exception as e:
+        print(f"Error generating audio: {e}")
+        return None
 
-    return log
+# === FEATURE 3.5: COMPREHENSIVE PROOF GENERATOR ===
+def generate_all_proofs(excuse_text, user_id, output_dir="static/proofs"):
+    """
+    Generate all types of proof for an excuse: document, chat image, audio, and location data.
+    
+    Parameters:
+    - excuse_text (str): The excuse text
+    - user_id (str): User ID for file naming
+    - output_dir (str): Directory to save proof files
+    
+    Returns:
+    - dict: Dictionary containing paths to all generated proof files
+    """
+    # Ensure output directory exists
+    os.makedirs(output_dir, exist_ok=True)
+    
+    # Generate unique filename prefix
+    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    prefix = f"{user_id}_{timestamp}"
+    
+    proofs = {}
+    
+    try:
+        # Generate document
+        pdf_path = os.path.join(output_dir, f"{prefix}_document.pdf")
+        proofs['document'] = generate_fake_document(excuse_text, output_path=pdf_path)
+        
+        # Generate chat image
+        chat_path = os.path.join(output_dir, f"{prefix}_chat.png")
+        proofs['chat_image'] = generate_fake_chat_image(excuse_text, output_path=chat_path)
+        
+        # Generate audio
+        audio_path = os.path.join(output_dir, f"{prefix}_audio.mp3")
+        proofs['audio'] = save_excuse_audio(excuse_text, output_path=audio_path)
+        
+        # Generate location data
+        proofs['location_data'] = generate_fake_location(excuse_text)
+        
+        return proofs
+        
+    except Exception as e:
+        print(f"Error generating proofs: {e}")
+        return proofs
 
 if __name__ == "__main__":
     excuse = excuse_generator("I need a funny excuse for missing my friend's birthday party. Make it exaggerated.")

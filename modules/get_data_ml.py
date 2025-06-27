@@ -1,8 +1,8 @@
 # scheduler_utils.py — shared logic for excuse ML scheduling
 
 import pandas as pd
-from db import get_connection
-from generate_proof import infer_context_nlp  # assumes NLP context extraction
+from modules.db import get_connection
+from modules.generate_proof import infer_context_nlp  # assumes NLP context extraction
 
 def load_user_excuse_data(user_id=None):
     conn = get_connection()

@@ -1,7 +1,7 @@
 # user_auth.py — user registration and authentication
 
 import bcrypt
-from db import get_connection
+from modules.db import get_connection
 
 # === Password Utilities ===
 def hash_password(plain_text_password):
@@ -31,7 +31,7 @@ def register_user(user_id, username, email, plain_password):
 def authenticate_user(user_id, plain_password):
     conn = get_connection()
     c = conn.cursor()
-    c.execute("SELECT password_hash FROM users WHERE user_id = %s", (user_id,))
+    c.execute("SELECT password_hash FROM users WHERE user_id = %s OR username = %s OR email = %s", (user_id, user_id, user_id))
     result = c.fetchone()
     conn.close()
     if not result:

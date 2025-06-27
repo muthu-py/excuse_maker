@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - ExcuseGenie</title>
+    <link rel="stylesheet" href="/static/login.css">
+</head>
+<body>
+    <div class="login-container">
+        <form class="login-form" method="POST" action="{{ url_for('login') }}">
+            <h2>Login to <span class="brand">ExcuseGenie</span></h2>
+            
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="flash-message {{ category }}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            
+            <div class="form-group">
+                <label for="login-username">Email or Username</label>
+                <input type="text" id="login-username" name="username" placeholder="Enter your email or username" required>
+            </div>
+            <div class="form-group">
+                <label for="login-password">Password</label>
+                <input type="password" id="login-password" name="password" placeholder="Enter your password" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Login</button>
+            <div class="form-links">
+                <a href="{{ url_for('register') }}">Don't have an account? Register</a>
+                <a href="#" class="forgot">Forgot Password?</a>
+            </div>
+        </form>
+    </div>
+</body>
+</html>

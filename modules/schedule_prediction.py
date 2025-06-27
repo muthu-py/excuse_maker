@@ -2,8 +2,8 @@
 
 from apscheduler.schedulers.blocking import BlockingScheduler
 from datetime import datetime
-from excuse_predictor import suggest_excuse_if_needed
-from db import get_connection
+from modules.excuse_predictor import suggest_excuse_if_needed
+from modules.db import get_connection
 
 # Fetch distinct users from excuses table
 def fetch_active_users():

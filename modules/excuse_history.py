@@ -1,6 +1,6 @@
 # excuse_history.py — excuse and apology tracking per user
 
-from db import get_connection
+from modules.db import get_connection
 from datetime import datetime
 
 # === Save Excuse to DB ===
@@ -36,6 +36,21 @@ def mark_excuse_favorite(excuse_id):
     conn.commit()
     conn.close()
     return f"Excuse ID {excuse_id} marked as favorite."
+
+# === Delete Excuse ===
+def delete_excuse(excuse_id, user_id):
+    conn = get_connection()
+    c = conn.cursor()
+    # Only delete if the excuse belongs to the user
+    c.execute("DELETE FROM excuses WHERE excuse_id = %s AND user_id = %s", (excuse_id, user_id))
+    deleted_rows = c.rowcount
+    conn.commit()
+    conn.close()
+    
+    if deleted_rows > 0:
+        return f"Excuse ID {excuse_id} deleted successfully."
+    else:
+        return f"Excuse ID {excuse_id} not found or not authorized to delete."
 
 def rank_excuses(user_id, context=None):
     conn = get_connection()

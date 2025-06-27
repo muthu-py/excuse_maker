@@ -4,10 +4,10 @@ import pandas as pd
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import cross_val_score
-from get_data_ml import load_user_excuse_data, extract_features
-from generate_exucuse import excuse_generator
+from modules.get_data_ml import load_user_excuse_data, extract_features
+from modules.generate_exucuse import excuse_generator
 
-from prediction_utils import save_model, load_model, USER_MODEL_DIR,GLOBAL_MODEL_PATH
+from modules.prediction_utils import save_model, load_model, USER_MODEL_DIR,GLOBAL_MODEL_PATH
 
 def train_user_model(user_id, min_samples=30, retrain=False):
     model_path = os.path.join(USER_MODEL_DIR, f"{user_id}_model.pkl")

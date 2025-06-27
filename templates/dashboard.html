@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - ExcuseGenie</title>
+    <link rel="stylesheet" href="/static/dashboard.css">
+</head>
+<body>
+    <!-- Top Navigation Bar -->
+    <nav class="top-nav">
+        <div class="nav-left">
+            <div class="logo">🤖 ExcuseGenie</div>
+        </div>
+        <div class="nav-right">
+            <span class="welcome">Welcome, {{ username }}!</span>
+            <a href="{{ url_for('logout') }}" class="logout-btn">Logout</a>
+        </div>
+        <button class="mobile-menu-btn" id="mobileMenuBtn">☰</button>
+    </nav>
+
+    <div class="dashboard-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar" id="sidebar">
+            <nav class="sidebar-nav">
+                <a href="#generate" class="nav-item active" data-section="generate">
+                    <span class="nav-icon">✨</span>
+                    <span class="nav-text">Generate Excuse</span>
+                </a>
+                <a href="#history" class="nav-item" data-section="history">
+                    <span class="nav-icon">📋</span>
+                    <span class="nav-text">Excuse History</span>
+                </a>
+                <a href="#settings" class="nav-item" data-section="settings">
+                    <span class="nav-icon">⚙️</span>
+                    <span class="nav-text">Settings</span>
+                </a>
+                <a href="#language" class="nav-item" data-section="language">
+                    <span class="nav-icon">🌐</span>
+                    <span class="nav-text">Language</span>
+                </a>
+                <a href="#sms-log" class="nav-item" data-section="sms-log">
+                    <span class="nav-icon">📱</span>
+                    <span class="nav-text">SMS/Call Log</span>
+                </a>
+                <a href="#help" class="nav-item" data-section="help">
+                    <span class="nav-icon">❓</span>
+                    <span class="nav-text">Help/FAQ</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Generate Excuse Section -->
+            <div id="generate-excuse" class="content-section active">
+                <h2>🤖 Generate Smart Excuse</h2>
+                <p>Create believable excuses with AI-powered generation and optional proof documents.</p>
+                
+                <form class="excuse-form">
+                    <div class="form-group">
+                        <label for="category">Category:</label>
+                        <select id="category" required>
+                            <option value="">Select a category</option>
+                            <option value="work">Work/Office</option>
+                            <option value="school">School/Education</option>
+                            <option value="family">Family Emergency</option>
+                            <option value="health">Health/Medical</option>
+                            <option value="social">Social Event</option>
+                            <option value="transport">Transportation</option>
+                            <option value="general">General</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="context">Context/Details:</label>
+                        <textarea id="context" placeholder="Describe your situation (e.g., 'I need to miss the team meeting tomorrow')" required></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="tone">Tone:</label>
+                        <select id="tone">
+                            <option value="professional">Professional</option>
+                            <option value="casual">Casual</option>
+                            <option value="formal">Formal</option>
+                            <option value="apologetic">Apologetic</option>
+                            <option value="urgent">Urgent</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Generate Proof Documents:</label>
+                        <div class="proof-options">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="proof-document" value="document">
+                                <span class="checkmark"></span>
+                                📄 Official Document
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="proof-chat" value="chat">
+                                <span class="checkmark"></span>
+                                💬 Chat Screenshot
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="proof-audio" value="audio">
+                                <span class="checkmark"></span>
+                                🎵 Audio Recording
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="proof-location" value="location">
+                                <span class="checkmark"></span>
+                                📍 Location Data
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <button type="button" id="generateBtn" class="btn btn-primary">Generate Excuse</button>
+                </form>
+                
+                <div id="excuseResult" class="excuse-result" style="display: none;">
+                    <h3>Generated Excuse:</h3>
+                    <div class="excuse-text" id="excuseText"></div>
+                    <div class="excuse-actions">
+                        <button id="copyBtn" class="btn btn-secondary">📋 Copy</button>
+                        <button id="saveBtn" class="btn btn-success">💾 Save to History</button>
+                        <button id="regenerateBtn" class="btn btn-outline">🔄 Regenerate</button>
+                    </div>
+                </div>
+                
+                <div id="proofResult" class="proof-result" style="display: none;">
+                    <h3>Generated Proof Documents:</h3>
+                    <div id="proofFiles" class="proof-files">
+                        <!-- Proof files will be displayed here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Excuse History Section -->
+            <section id="history" class="content-section">
+                <h2>Excuse History</h2>
+                <div class="history-controls">
+                    <input type="text" id="searchHistory" placeholder="Search excuses..." class="search-input">
+                    <select id="filterCategory" class="filter-select">
+                        <option value="">All Categories</option>
+                        <option value="work">Work</option>
+                        <option value="school">School</option>
+                        <option value="personal">Personal</option>
+                        <option value="family">Family</option>
+                        <option value="social">Social</option>
+                        <option value="health">Health</option>
+                    </select>
+                </div>
+                <div class="history-list" id="historyList">
+                    <!-- History items will be populated by JavaScript -->
+                </div>
+            </section>
+
+            <!-- Settings Section -->
+            <section id="settings" class="content-section">
+                <h2>Settings</h2>
+                <div class="settings-grid">
+                    <div class="setting-card">
+                        <h3>Account Settings</h3>
+                        <p>Manage your account preferences and profile information.</p>
+                        <button class="btn btn-outline">Coming Soon</button>
+                    </div>
+                    <div class="setting-card">
+                        <h3>Notification Preferences</h3>
+                        <p>Configure how you receive notifications and alerts.</p>
+                        <button class="btn btn-outline">Coming Soon</button>
+                    </div>
+                    <div class="setting-card">
+                        <h3>Privacy Settings</h3>
+                        <p>Control your data privacy and security settings.</p>
+                        <button class="btn btn-outline">Coming Soon</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Language Section -->
+            <section id="language" class="content-section">
+                <h2>Language Preferences</h2>
+                <div class="language-options">
+                    <div class="language-card">
+                        <h3>Primary Language</h3>
+                        <select id="primaryLanguage" class="language-select">
+                            <option value="en">English</option>
+                            <option value="es">Spanish</option>
+                            <option value="fr">French</option>
+                            <option value="de">German</option>
+                            <option value="it">Italian</option>
+                        </select>
+                    </div>
+                    <div class="language-card">
+                        <h3>Secondary Language</h3>
+                        <select id="secondaryLanguage" class="language-select">
+                            <option value="">None</option>
+                            <option value="en">English</option>
+                            <option value="es">Spanish</option>
+                            <option value="fr">French</option>
+                            <option value="de">German</option>
+                            <option value="it">Italian</option>
+                        </select>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SMS/Call Log Section -->
+            <section id="sms-log" class="content-section">
+                <h2>SMS/Call Log</h2>
+                <div class="log-controls">
+                    <button class="btn btn-primary" id="sendSmsBtn">Send SMS</button>
+                    <button class="btn btn-primary" id="makeCallBtn">Make Call</button>
+                </div>
+                <div class="log-list" id="logList">
+                    <div class="log-item">
+                        <div class="log-icon">📱</div>
+                        <div class="log-content">
+                            <div class="log-title">SMS Sent</div>
+                            <div class="log-details">To: +1234567890 | Time: 2 hours ago</div>
+                        </div>
+                    </div>
+                    <div class="log-item">
+                        <div class="log-icon">📞</div>
+                        <div class="log-content">
+                            <div class="log-title">Call Made</div>
+                            <div class="log-details">To: +1234567890 | Time: 1 day ago</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Help/FAQ Section -->
+            <section id="help" class="content-section">
+                <h2>Help & FAQ</h2>
+                <div class="faq-list">
+                    <div class="faq-item">
+                        <h3>How do I generate an excuse?</h3>
+                        <p>Select a category, provide context, choose a tone, and click "Generate Excuse". The AI will create a personalized excuse for you.</p>
+                    </div>
+                    <div class="faq-item">
+                        <h3>Can I save my excuses?</h3>
+                        <p>Yes! After generating an excuse, you can save it to your history for future reference.</p>
+                    </div>
+                    <div class="faq-item">
+                        <h3>How do I send an SMS?</h3>
+                        <p>Go to the SMS/Call Log section and click "Send SMS" to send your excuse via text message.</p>
+                    </div>
+                    <div class="faq-item">
+                        <h3>Is my data secure?</h3>
+                        <p>Absolutely! We use industry-standard encryption and never share your personal information.</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="/static/dashboard.js"></script>
+</body>
+</html>
