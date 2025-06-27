@@ -37,14 +37,15 @@ def send_real_emergency_sms(to_number, excuse_text, sid, token, from_number):
     """
     client = Client(sid, token)
     message_body,_ = generate_emergency_sms_and_call_text(excuse_text)
-
-    message = client.messages.create(
-        body=message_body,
-        from_=from_number,
-        to=to_number
-    )
-    return f"SMS sent to {to_number} | SID: {message.sid}"
-
+    try:
+        message = client.messages.create(
+            body=message_body,
+            from_=from_number,
+            to=to_number
+        )
+        return f"SMS sent to {to_number} | SID: {message.sid}"
+    except Exception as e:
+        return f"❌ SMS Error: {e}"
 
 def trigger_emergency_call(to_number, excuse_text, sid, token, from_number):
     """
@@ -53,13 +54,15 @@ def trigger_emergency_call(to_number, excuse_text, sid, token, from_number):
     _, call_text = generate_emergency_sms_and_call_text(excuse_text)
     client = Client(sid, token)
     twiml = f'<Response><Say voice="alice">{call_text}</Say></Response>'
-
-    call = client.calls.create(
-        twiml=twiml,
-        to=to_number,
-        from_=from_number
-    )
-    return f"Call placed to {to_number} | Call SID: {call.sid}"
+    try :
+        call = client.calls.create(
+            twiml=twiml,
+            to=to_number,
+            from_=from_number
+        )
+        return f"Call placed to {to_number} | Call SID: {call.sid}"
+    except Exception as e:
+        return f"❌ Call Error: {e}"
 
 sid = os.getenv("sid")
 token = os.getenv("token")

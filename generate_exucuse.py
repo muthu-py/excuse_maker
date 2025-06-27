@@ -64,11 +64,12 @@ def infer_parameters_from_prompt(prompt: str):
     return context, urgency, tone, believability
 
 # Unified function
-def excuse_generator(prompt_text):
+def excuse_generator(prompt_text,language="en"):
     context, urgency, tone, believability = infer_parameters_from_prompt(prompt_text)
 
     prompt = (
         f"You are an AI excuse generator. Create a believable excuse using the following settings:\n"
+        f"Respond only in this language: {language}.\n"
         f"- Context: {context}\n"
         f"- Urgency: {urgency}\n"
         f"- Tone: {tone}\n"
@@ -80,6 +81,7 @@ def excuse_generator(prompt_text):
         f"- For 'creative', invent something interesting but possible.\n"
         f"- For 'exaggerated', allow some over-the-top storytelling.\n"
         f"- Make sure the excuse fits naturally in a real-life situation."
+        f"also use this for clarification {prompt_text}"
     )
 
     try:
@@ -104,15 +106,17 @@ def infer_apology_tone_from_excuse(excuse):
     else:
         return "neutral"
 
-def generate_apology(prompt_text):
+def generate_apology(prompt_text,language="en"):
     excuse = excuse_generator(prompt_text)
     tone = infer_apology_tone_from_excuse(excuse)
 
     prompt = (
         f"Write an apology message for this excuse:\n"
+        f"Respond only in this language: {language}.\n"
         f"\"{excuse}\"\n"
         f"The tone should be: {tone}\n"
         f"It should sound realistic, slightly guilt-tripping, and sincere. Keep it under 80 words."
+        f"also use this for clarification {prompt_text}"
     )
 
     try:

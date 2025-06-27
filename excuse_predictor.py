@@ -1,5 +1,5 @@
 # scheduler_model.py — model training, prediction, and excuse suggestion
-
+import os
 import pandas as pd
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.linear_model import LogisticRegression
@@ -7,25 +7,46 @@ from sklearn.model_selection import cross_val_score
 from get_data_ml import load_user_excuse_data, extract_features
 from generate_exucuse import excuse_generator
 
-def train_user_model(user_id, min_samples=30):
+from prediction_utils import save_model, load_model, USER_MODEL_DIR,GLOBAL_MODEL_PATH
+
+def train_user_model(user_id, min_samples=30, retrain=False):
+    model_path = os.path.join(USER_MODEL_DIR, f"{user_id}_model.pkl")
+    
+    if not retrain:
+        existing_model = load_model(model_path)
+        if existing_model:
+            return existing_model
+
     df = load_user_excuse_data(user_id)
     if len(df) < min_samples:
         return None
+
     X = extract_features(df)
     y = [1] * len(X)
     clf = DecisionTreeClassifier(max_depth=4, min_samples_split=5)
     clf.fit(X, y)
+    save_model(clf, model_path)
     return clf
 
-def train_global_model():
+
+def train_global_model(retrain=False):
+    model = None
+    if not retrain:
+        model = load_model(GLOBAL_MODEL_PATH)
+        if model:
+            return model
+
     df = load_user_excuse_data()
     if len(df) < 50:
         return None
+
     X = extract_features(df)
     y = [1] * len(X)
     clf = LogisticRegression()
     clf.fit(X, y)
+    save_model(clf, GLOBAL_MODEL_PATH)
     return clf
+
 
 def predict_excuse_need(user_id, check_time, user_model=None, global_model=None):
     test_df = pd.DataFrame([{

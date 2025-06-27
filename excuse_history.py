@@ -63,3 +63,22 @@ def rank_excuses(user_id, context=None):
 
     ranked.sort(reverse=True)
     return [text for score, text in ranked]
+
+def save_emergency_log(user_id, method, phone, message):
+    conn = get_connection()
+    c = conn.cursor()
+    c.execute("""
+        INSERT INTO emergency_logs (user_id, method, phone, message)
+        VALUES (%s, %s, %s, %s)
+    """, (user_id, method, phone, message))
+    conn.commit()
+    conn.close()
+    return "Emergency log saved."
+
+def get_emergency_logs(user_id):
+    conn = get_connection()
+    c = conn.cursor()
+    c.execute("SELECT * FROM emergency_logs WHERE user_id = %s ORDER BY timestamp DESC", (user_id,))
+    data = c.fetchall()
+    conn.close()
+    return data
