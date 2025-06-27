@@ -1,6 +1,7 @@
 import google.generativeai as genai
 import spacy
 import os
+from gtts import gTTS
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
@@ -120,6 +121,18 @@ def generate_apology(prompt_text):
     except Exception as e:
         return f"Error generating apology: {e}"
 
+def save_excuse_audio(text, output_path="excuse_audio.mp3", lang="en"):
+    """
+    Converts the given text into speech and saves it as an MP3.
+    """
+    try:
+        tts = gTTS(text=text, lang=lang, slow=False)
+        tts.save(output_path)
+        return f"Audio saved at: {output_path}"
+    except Exception as e:
+        return f"Error generating audio: {e}"
+
+
 
 if __name__ == "__main__":
     prompt_input = "I need a funny excuse for missing my friend's birthday party. Make it exaggerated."
@@ -131,6 +144,8 @@ if __name__ == "__main__":
     print("\n=== Apology ===")
     apology = generate_apology(prompt_input)
     print(apology)
+
+    print(save_excuse_audio(excuse, output_path="excuse_voice.mp3"))
     #print(excuse_generator("Make me a formal excuse for skipping my boss’s meeting due to an emergency."))
 
     #print(excuse_generator("Give me a creative but believable excuse for missing class today."))
