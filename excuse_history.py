@@ -36,3 +36,30 @@ def mark_excuse_favorite(excuse_id):
     conn.commit()
     conn.close()
     return f"Excuse ID {excuse_id} marked as favorite."
+
+def rank_excuses(user_id, context=None):
+    conn = get_connection()
+    c = conn.cursor()
+
+    query = "SELECT excuse_id, excuse, context, favorite FROM excuses WHERE user_id = %s"
+    params = [user_id]
+    if context:
+        query += " AND prompt LIKE %s"
+        params.append(f"%{context}%")
+
+    c.execute(query, tuple(params))
+    results = c.fetchall()
+    conn.close()
+
+    ranked = []
+    for row in results:
+        excuse_id, text, ctx, favorite = row
+        score = 1.0
+        if favorite:
+            score += 1.5
+        if context and context in ctx:
+            score += 0.5
+        ranked.append((score, text))
+
+    ranked.sort(reverse=True)
+    return [text for score, text in ranked]
