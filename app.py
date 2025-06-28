@@ -108,28 +108,59 @@ def dashboard():
 def api_generate_excuse():
     if 'user_id' not in session:
         return jsonify({'error': 'Not authenticated'}), 401
-    
+
     try:
         data = request.get_json()
         prompt = data.get('prompt', '')
         category = data.get('category', '')
         context = data.get('context', '')
         tone = data.get('tone', 'neutral')
-        
+        language = data.get('language', 'en')
+        print(type(language))
+
         if not prompt:
             return jsonify({'error': 'Prompt is required'}), 400
-        
+
         # Generate excuse using the backend module
-        excuse = excuse_generator(prompt+context+category+tone)
-        
+        excuse = excuse_generator(prompt, language=language)
+        apology = generate_apology(prompt, language=language)
+
+        # Generate proofs
+        user_id = session['user_id']
+        proofs = generate_all_proofs(excuse, user_id, language=language)
+        pdf_path = proofs.get('document')
+        chat_image_path = proofs.get('chat_image')
+        voice_path = proofs.get('audio')
+
+        # Save to database automatically
+        result = save_excuse(
+            user_id,
+            prompt,
+            excuse,
+            apology,
+            pdf_path=pdf_path,
+            chat_image_path=chat_image_path,
+            voice_path=voice_path,
+            favorite=False
+        )
+
+        api_get_excuses()
+
         return jsonify({
             'excuse': excuse,
             'category': category,
             'context': context,
-            'tone': tone
+            'tone': tone,
+            'pdf_path': pdf_path,
+            'chat_image_path': chat_image_path,
+            'voice_path': voice_path,
+            'message': 'Excuse generated and saved successfully!',
+            'result': result
         })
-        
+
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/save_excuse', methods=['POST'])
@@ -171,17 +202,28 @@ def api_get_excuses():
         # Convert to list of dictionaries
         excuse_list = []
         for excuse in excuses:
+            pdf_path = excuse[5]
+            chat_image_path = excuse[6]
+            voice_path = excuse[9]
+            # Convert absolute paths to download URLs
+            if pdf_path and not str(pdf_path).startswith('/download_proof/'):
+                pdf_path = f"/download_proof/{os.path.basename(pdf_path)}"
+            if chat_image_path and not str(chat_image_path).startswith('/download_proof/'):
+                chat_image_path = f"/download_proof/{os.path.basename(chat_image_path)}"
+            if voice_path and not str(voice_path).startswith('/download_proof/'):
+                voice_path = f"/download_proof/{os.path.basename(voice_path)}"
             excuse_list.append({
                 'excuse_id': excuse[0],
                 'user_id': excuse[1],
                 'prompt': excuse[2],
                 'excuse': excuse[3],
                 'apology': excuse[4],
-                'pdf_path': excuse[5],
-                'chat_image_path': excuse[6],
-                'voice_path': excuse[7],
+                'pdf_path': pdf_path,
+                'chat_image_path': chat_image_path,
+                'timestamp': excuse[7].isoformat() ,
                 'favorite': excuse[8],
-                'timestamp': excuse[9].isoformat() if excuse[9] else None
+                'voice_path': voice_path,
+                'score': excuse[10]
             })
         
         return jsonify({'excuses': excuse_list})
@@ -211,6 +253,7 @@ def api_generate_proof():
         data = request.get_json()
         excuse = data.get('excuse', '')
         proof_types = data.get('proof_types', [])
+        language = data.get('language', 'en')
         
         if not excuse:
             return jsonify({'error': 'Excuse is required'}), 400
@@ -240,7 +283,7 @@ def api_generate_proof():
                 elif proof_type == 'audio':
                     audio_filename = f"{prefix}_audio.mp3"
                     audio_path = f"static/proofs/{audio_filename}"
-                    save_excuse_audio(excuse, output_path=audio_path)
+                    save_excuse_audio(excuse, output_path=audio_path, language=language)
                     proofs['voice_path'] = f"/download_proof/{audio_filename}"
                 
                 elif proof_type == 'location':
@@ -250,7 +293,7 @@ def api_generate_proof():
         
         else:
             # Generate all proofs using the comprehensive function
-            proofs = generate_all_proofs(excuse, user_id)
+            proofs = generate_all_proofs(excuse, user_id, language=language)
             
             # Convert file paths to download URLs
             result = {}
@@ -408,6 +451,24 @@ def preview_proof(filename):
         
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+@app.route('/api/mark_favorite/<int:excuse_id>', methods=['POST'])
+def api_mark_favorite(excuse_id):
+    if 'user_id' not in session:
+        return jsonify({'error': 'Not authenticated'}), 401
+    favorite = request.json.get('favorite', True)
+    from modules.excuse_history import mark_excuse_favorite
+    result = mark_excuse_favorite(excuse_id, favorite)
+    return jsonify({'message': result})
+
+@app.route('/api/set_score/<int:excuse_id>', methods=['POST'])
+def api_set_score(excuse_id):
+    if 'user_id' not in session:
+        return jsonify({'error': 'Not authenticated'}), 401
+    score = request.json.get('score', 0)
+    from modules.excuse_history import set_excuse_score
+    result = set_excuse_score(excuse_id, score)
+    return jsonify({'message': result})
 
 if __name__ == '__main__':
     app.run(debug=True)

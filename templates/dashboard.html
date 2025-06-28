@@ -23,7 +23,7 @@
         <!-- Sidebar Navigation -->
         <aside class="sidebar" id="sidebar">
             <nav class="sidebar-nav">
-                <a href="#generate" class="nav-item active" data-section="generate">
+                <a href="#generate" class="nav-item active" data-section="generate-excuse">
                     <span class="nav-icon">✨</span>
                     <span class="nav-text">Generate Excuse</span>
                 </a>
@@ -35,9 +35,9 @@
                     <span class="nav-icon">⚙️</span>
                     <span class="nav-text">Settings</span>
                 </a>
-                <a href="#language" class="nav-item" data-section="language">
+                <!-- <a href="#language" class="nav-item" data-section="language">
                     <span class="nav-icon">🌐</span>
-                    <span class="nav-text">Language</span>
+                    <span class="nav-text">Language</span> -->
                 </a>
                 <a href="#sms-log" class="nav-item" data-section="sms-log">
                     <span class="nav-icon">📱</span>
@@ -85,6 +85,35 @@
                             <option value="formal">Formal</option>
                             <option value="apologetic">Apologetic</option>
                             <option value="urgent">Urgent</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="language">Language:</label>
+                        <select id="language" required>
+                            <optgroup label="Indian Languages">
+                                <option value="hi">Hindi</option>
+                                <option value="ta">Tamil</option>
+                                <option value="te">Telugu</option>
+                                <option value="kn">Kannada</option>
+                                <option value="ml">Malayalam</option>
+                                <option value="bn">Bengali</option>
+                                <option value="gu">Gujarati</option>
+                                <option value="mr">Marathi</option>
+                                <option value="pa">Punjabi</option>
+                                <option value="ur">Urdu</option>
+                            </optgroup>
+                            <optgroup label="Major Foreign Languages">
+                                <option value="en" selected>English</option>
+                                <option value="fr">French</option>
+                                <option value="es">Spanish</option>
+                                <option value="de">German</option>
+                                <option value="it">Italian</option>
+                                <option value="zh">Chinese</option>
+                                <option value="ja">Japanese</option>
+                                <option value="ru">Russian</option>
+                                <option value="ar">Arabic</option>
+                            </optgroup>
                         </select>
                     </div>
                     
@@ -138,7 +167,7 @@
             <!-- Excuse History Section -->
             <section id="history" class="content-section">
                 <h2>Excuse History</h2>
-                <div class="history-controls">
+                <div class="history-controls" style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: center;">
                     <input type="text" id="searchHistory" placeholder="Search excuses..." class="search-input">
                     <select id="filterCategory" class="filter-select">
                         <option value="">All Categories</option>
@@ -149,6 +178,13 @@
                         <option value="social">Social</option>
                         <option value="health">Health</option>
                     </select>
+                    <select id="filterFavorite" class="filter-select">
+                        <option value="">All</option>
+                        <option value="1">Favorites</option>
+                        <option value="0">Non-Favorites</option>
+                    </select>
+                    <label for="filterScore" style="font-size:0.95rem;">Min Score:</label>
+                    <input type="number" id="filterScore" min="0" max="5" step="0.5" value="" style="width:60px;">
                 </div>
                 <div class="history-list" id="historyList">
                     <!-- History items will be populated by JavaScript -->
@@ -177,33 +213,6 @@
                 </div>
             </section>
 
-            <!-- Language Section -->
-            <section id="language" class="content-section">
-                <h2>Language Preferences</h2>
-                <div class="language-options">
-                    <div class="language-card">
-                        <h3>Primary Language</h3>
-                        <select id="primaryLanguage" class="language-select">
-                            <option value="en">English</option>
-                            <option value="es">Spanish</option>
-                            <option value="fr">French</option>
-                            <option value="de">German</option>
-                            <option value="it">Italian</option>
-                        </select>
-                    </div>
-                    <div class="language-card">
-                        <h3>Secondary Language</h3>
-                        <select id="secondaryLanguage" class="language-select">
-                            <option value="">None</option>
-                            <option value="en">English</option>
-                            <option value="es">Spanish</option>
-                            <option value="fr">French</option>
-                            <option value="de">German</option>
-                            <option value="it">Italian</option>
-                        </select>
-                    </div>
-                </div>
-            </section>
 
             <!-- SMS/Call Log Section -->
             <section id="sms-log" class="content-section">
@@ -256,5 +265,15 @@
     </div>
 
     <script src="/static/dashboard.js"></script>
+    <script>
+    // This script block is for server-side rendering fallback only. The main logic is in dashboard.js
+    function renderProofDownloads(item) {
+        let html = '';
+        if (item.pdf_path) html += `<a href="${item.pdf_path}" class="btn btn-download" download>📄 Download PDF</a>`;
+        if (item.chat_image_path) html += `<a href="${item.chat_image_path}" class="btn btn-download" download>💬 Download Chat</a>`;
+        if (item.voice_path) html += `<a href="${item.voice_path}" class="btn btn-download" download>🎵 Download Audio</a>`;
+        return html;
+    }
+    </script>
 </body>
 </html>

@@ -64,7 +64,7 @@ def infer_parameters_from_prompt(prompt: str):
     return context, urgency, tone, believability
 
 # Unified function
-def excuse_generator(prompt_text,language="en"):
+def excuse_generator(prompt_text, language="en"):
     context, urgency, tone, believability = infer_parameters_from_prompt(prompt_text)
 
     prompt = (
@@ -106,8 +106,8 @@ def infer_apology_tone_from_excuse(excuse):
     else:
         return "neutral"
 
-def generate_apology(prompt_text,language="en"):
-    excuse = excuse_generator(prompt_text)
+def generate_apology(prompt_text, language="en"):
+    excuse = excuse_generator(prompt_text, language=language)
     tone = infer_apology_tone_from_excuse(excuse)
 
     prompt = (
@@ -125,12 +125,12 @@ def generate_apology(prompt_text,language="en"):
     except Exception as e:
         return f"Error generating apology: {e}"
 
-def save_excuse_audio(text, output_path="excuse_audio.mp3", lang="en"):
+def save_excuse_audio(text, output_path="excuse_audio.mp3", language="en"):
     """
     Converts the given text into speech and saves it as an MP3.
     """
     try:
-        tts = gTTS(text=text, lang=lang, slow=False)
+        tts = gTTS(text=text, lang=language, slow=False)
         tts.save(output_path)
         return f"Audio saved at: {output_path}"
     except Exception as e:
@@ -150,6 +150,6 @@ if __name__ == "__main__":
     print(apology)
 
     print(save_excuse_audio(excuse, output_path="excuse_voice.mp3"))
-    #print(excuse_generator("Make me a formal excuse for skipping my boss’s meeting due to an emergency."))
+    #print(excuse_generator("Make me a formal excuse for skipping my boss's meeting due to an emergency."))
 
     #print(excuse_generator("Give me a creative but believable excuse for missing class today."))

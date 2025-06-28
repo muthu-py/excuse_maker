@@ -265,67 +265,41 @@ def generate_fake_location(excuse_text, name=None):
 def save_excuse_audio(excuse_text, output_path="excuse_audio.mp3", language='en'):
     """
     Generate audio file from excuse text using Google Text-to-Speech.
-    
-    Parameters:
-    - excuse_text (str): The excuse text to convert to audio
-    - output_path (str): Output path for the audio file
-    - language (str): Language code (default: 'en' for English)
-    
-    Returns:
-    - str: Path to the saved audio file
     """
     try:
         # Create gTTS object
         tts = gTTS(text=excuse_text, lang=language, slow=False)
-        
         # Save the audio file
         tts.save(output_path)
-        
         return os.path.abspath(output_path)
     except Exception as e:
         print(f"Error generating audio: {e}")
         return None
 
 # === FEATURE 3.5: COMPREHENSIVE PROOF GENERATOR ===
-def generate_all_proofs(excuse_text, user_id, output_dir="static/proofs"):
+def generate_all_proofs(excuse_text, user_id, language='en', output_dir="static/proofs"):
     """
     Generate all types of proof for an excuse: document, chat image, audio, and location data.
-    
-    Parameters:
-    - excuse_text (str): The excuse text
-    - user_id (str): User ID for file naming
-    - output_dir (str): Directory to save proof files
-    
-    Returns:
-    - dict: Dictionary containing paths to all generated proof files
     """
     # Ensure output directory exists
     os.makedirs(output_dir, exist_ok=True)
-    
     # Generate unique filename prefix
     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
     prefix = f"{user_id}_{timestamp}"
-    
     proofs = {}
-    
     try:
         # Generate document
         pdf_path = os.path.join(output_dir, f"{prefix}_document.pdf")
         proofs['document'] = generate_fake_document(excuse_text, output_path=pdf_path)
-        
         # Generate chat image
         chat_path = os.path.join(output_dir, f"{prefix}_chat.png")
         proofs['chat_image'] = generate_fake_chat_image(excuse_text, output_path=chat_path)
-        
         # Generate audio
         audio_path = os.path.join(output_dir, f"{prefix}_audio.mp3")
-        proofs['audio'] = save_excuse_audio(excuse_text, output_path=audio_path)
-        
+        proofs['audio'] = save_excuse_audio(excuse_text, output_path=audio_path, language=language)
         # Generate location data
         proofs['location_data'] = generate_fake_location(excuse_text)
-        
         return proofs
-        
     except Exception as e:
         print(f"Error generating proofs: {e}")
         return proofs

@@ -811,4 +811,14 @@ body {
         align-items: flex-start;
         gap: 0.5rem;
     }
+}
+
+#language {
+    width: 100%;
+    padding: 0.8rem;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 1rem;
+    background: #f8fafc;
+    margin-bottom: 1rem;
 } 
