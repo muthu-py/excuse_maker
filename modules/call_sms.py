@@ -1,6 +1,7 @@
 from twilio.rest import Client
-from modules.generate_exucuse import *
+from modules.generate_exucuse import model
 #from generate_exucuse import *
+import os
 
 def generate_emergency_sms_and_call_text(excuse_text):
     """
