@@ -1,5 +1,6 @@
 from twilio.rest import Client
 from modules.generate_exucuse import *
+#from generate_exucuse import *
 
 def generate_emergency_sms_and_call_text(excuse_text):
     """
@@ -43,7 +44,7 @@ def send_real_emergency_sms(to_number, excuse_text, sid, token, from_number):
             from_=from_number,
             to=to_number
         )
-        return f"SMS sent to {to_number} | SID: {message.sid}"
+        return f"SMS sent to {to_number} | SID: {message.sid} | Message: {message_body}"
     except Exception as e:
         return f"❌ SMS Error: {e}"
 
@@ -60,7 +61,7 @@ def trigger_emergency_call(to_number, excuse_text, sid, token, from_number):
             to=to_number,
             from_=from_number
         )
-        return f"Call placed to {to_number} | Call SID: {call.sid}"
+        return f"Call placed to {to_number} | Call SID: {call.sid} | Call Text: {call_text}"
     except Exception as e:
         return f"❌ Call Error: {e}"
 

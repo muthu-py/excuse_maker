@@ -18,6 +18,14 @@ const sendSmsBtn = document.getElementById('sendSmsBtn');
 const makeCallBtn = document.getElementById('makeCallBtn');
 const logList = document.getElementById('logList');
 
+// Modal logic for phone & message input
+const phonePromptModal = document.getElementById('phonePromptModal');
+const closeModalBtn = document.getElementById('closeModalBtn');
+const modalPhone = document.getElementById('modalPhone');
+const modalMessage = document.getElementById('modalMessage');
+const modalSendSmsBtn = document.getElementById('modalSendSmsBtn');
+const modalMakeCallBtn = document.getElementById('modalMakeCallBtn');
+
 // Initialize dashboard
 document.addEventListener('DOMContentLoaded', function() {
     initializeDashboard();
@@ -47,8 +55,23 @@ function initializeDashboard() {
     filterCategory.addEventListener('change', filterAndDisplayHistory);
     
     // SMS/Call functionality
-    sendSmsBtn.addEventListener('click', sendSms);
-    makeCallBtn.addEventListener('click', makeCall);
+    sendSmsBtn.addEventListener('click', () => {
+        modalPhone.value = '';
+        modalMessage.value = excuseText.textContent || '';
+        phonePromptModal.style.display = 'flex';
+        modalSendSmsBtn.style.display = 'inline-block';
+        modalMakeCallBtn.style.display = 'none';
+    });
+    makeCallBtn.addEventListener('click', () => {
+        modalPhone.value = '';
+        modalMessage.value = excuseText.textContent || '';
+        phonePromptModal.style.display = 'flex';
+        modalSendSmsBtn.style.display = 'none';
+        modalMakeCallBtn.style.display = 'inline-block';
+    });
+    closeModalBtn.addEventListener('click', () => {
+        phonePromptModal.style.display = 'none';
+    });
     
     // Close mobile menu when clicking outside
     document.addEventListener('click', function(e) {
@@ -776,82 +799,6 @@ async function generateProof(excuse) {
     }
 }
 
-// Send SMS
-async function sendSms() {
-    const excuse = excuseResult.dataset.excuse;
-    
-    if (!excuse) {
-        showNotification('Please generate an excuse first', 'error');
-        return;
-    }
-    
-    const phoneNumber = prompt('Enter phone number to send SMS:');
-    if (!phoneNumber) return;
-    
-    try {
-        const response = await fetch('/api/send_sms', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                to_number: phoneNumber,
-                excuse_text: excuse
-            })
-        });
-        
-        if (!response.ok) {
-            throw new Error('Failed to send SMS');
-        }
-        
-        const data = await response.json();
-        showNotification('SMS sent successfully!', 'success');
-        loadSmsCallLogs(); // Refresh logs
-        
-    } catch (error) {
-        console.error('Error sending SMS:', error);
-        showNotification('Failed to send SMS. Please try again.', 'error');
-    }
-}
-
-// Make call
-async function makeCall() {
-    const excuse = excuseResult.dataset.excuse;
-    
-    if (!excuse) {
-        showNotification('Please generate an excuse first', 'error');
-        return;
-    }
-    
-    const phoneNumber = prompt('Enter phone number to call:');
-    if (!phoneNumber) return;
-    
-    try {
-        const response = await fetch('/api/make_call', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                to_number: phoneNumber,
-                excuse_text: excuse
-            })
-        });
-        
-        if (!response.ok) {
-            throw new Error('Failed to make call');
-        }
-        
-        const data = await response.json();
-        showNotification('Call initiated successfully!', 'success');
-        loadSmsCallLogs(); // Refresh logs
-        
-    } catch (error) {
-        console.error('Error making call:', error);
-        showNotification('Failed to make call. Please try again.', 'error');
-    }
-}
-
 // Load SMS/Call logs
 async function loadSmsCallLogs() {
     try {
@@ -996,4 +943,48 @@ async function setScore(excuseId, score) {
     } catch (error) {
         showNotification('Failed to update score.', 'error');
     }
-} 
+}
+
+modalSendSmsBtn.addEventListener('click', async () => {
+    const phone = modalPhone.value.trim();
+    const message = modalMessage.value.trim();
+    if (!phone || !message) {
+        showNotification('Please enter both phone number and message.', 'error');
+        return;
+    }
+    try {
+        const response = await fetch('/api/send_sms', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ to_number: phone, excuse_text: message })
+        });
+        if (!response.ok) throw new Error('Failed to send SMS');
+        showNotification('SMS sent successfully!', 'success');
+        phonePromptModal.style.display = 'none';
+        loadSmsCallLogs();
+    } catch (error) {
+        showNotification('Failed to send SMS.', 'error');
+    }
+});
+
+modalMakeCallBtn.addEventListener('click', async () => {
+    const phone = modalPhone.value.trim();
+    const message = modalMessage.value.trim();
+    if (!phone || !message) {
+        showNotification('Please enter both phone number and message.', 'error');
+        return;
+    }
+    try {
+        const response = await fetch('/api/make_call', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ to_number: phone, excuse_text: message })
+        });
+        if (!response.ok) throw new Error('Failed to make call');
+        showNotification('Call initiated successfully!', 'success');
+        phonePromptModal.style.display = 'none';
+        loadSmsCallLogs();
+    } catch (error) {
+        showNotification('Failed to make call.', 'error');
+    }
+}); 

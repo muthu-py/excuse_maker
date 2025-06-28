@@ -327,15 +327,18 @@ def api_send_sms():
             return jsonify({'error': 'Phone number and excuse text are required'}), 400
         
         # Get Twilio credentials from environment
-        sid = os.getenv('TWILIO_SID')
-        token = os.getenv('TWILIO_TOKEN')
-        from_number = os.getenv('TWILIO_FROM_NUMBER')
+        sid = os.getenv('sid')
+        token = os.getenv('token')
+        from_number = os.getenv('from_number')
         
         if not all([sid, token, from_number]):
             return jsonify({'error': 'Twilio credentials not configured'}), 500
         
         # Send SMS using the backend module
         result = send_real_emergency_sms(to_number, excuse_text, sid, token, from_number)
+        print('Twilio SMS result:', result)
+        if 'Error' in result or '❌' in result:
+            return jsonify({'error': result}), 500
         
         # Log the SMS
         user_id = session['user_id']
@@ -348,6 +351,8 @@ def api_send_sms():
         })
         
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/make_call', methods=['POST'])
@@ -363,16 +368,18 @@ def api_make_call():
         if not to_number or not excuse_text:
             return jsonify({'error': 'Phone number and excuse text are required'}), 400
         
-        # Get Twilio credentials from environment
-        sid = os.getenv('TWILIO_SID')
-        token = os.getenv('TWILIO_TOKEN')
-        from_number = os.getenv('TWILIO_FROM_NUMBER')
+        sid = os.getenv('sid')
+        token = os.getenv('token')
+        from_number = os.getenv('from_number')
         
         if not all([sid, token, from_number]):
             return jsonify({'error': 'Twilio credentials not configured'}), 500
         
         # Make call using the backend module
         result = trigger_emergency_call(to_number, excuse_text, sid, token, from_number)
+        print('Twilio Call result:', result)
+        if 'Error' in result or '❌' in result:
+            return jsonify({'error': result}), 500
         
         # Log the call
         user_id = session['user_id']
@@ -385,6 +392,8 @@ def api_make_call():
         })
         
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/get_sms_logs', methods=['GET'])

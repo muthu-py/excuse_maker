@@ -264,6 +264,31 @@
         </main>
     </div>
 
+    <!-- Phone & Message Modal -->
+    <div id="phonePromptModal" class="modal" style="display:none;">
+      <div class="modal-content modal-smscall">
+        <span class="close" id="closeModalBtn">&times;</span>
+        <h3 style="margin-bottom:1.5rem; color:#3b82f6;">Send SMS or Make Call</h3>
+        <div class="modal-form-group">
+          <label for="modalPhone">Phone Number:</label>
+          <input type="text" id="modalPhone" class="modal-input" placeholder="Enter phone number">
+        </div>
+        <div class="modal-form-group">
+          <label for="modalMessage">Message:</label>
+          <textarea id="modalMessage" class="modal-textarea" placeholder="Enter your message"></textarea>
+        </div>
+        <div class="modal-actions">
+          <button class="btn btn-primary" id="modalSendSmsBtn">Send SMS</button>
+          <button class="btn btn-primary" id="modalMakeCallBtn">Make Call</button>
+        </div>
+      </div>
+    </div>
+    <style>
+    .modal { position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; z-index:10000; }
+    .modal-content { background:#fff; padding:2rem; border-radius:8px; min-width:300px; position:relative; }
+    .close { position:absolute; top:10px; right:15px; font-size:1.5rem; cursor:pointer; }
+    </style>
+
     <script src="/static/dashboard.js"></script>
     <script>
     // This script block is for server-side rendering fallback only. The main logic is in dashboard.js
